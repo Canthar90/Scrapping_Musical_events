@@ -1,6 +1,18 @@
 import requests
 import selectorlib
+import smtplib, ssl
+import os
+from dotenv import load_dotenv
+import time
 
+
+load_dotenv("env.env")
+
+USERNAME = os.getenv('EMAIL_USERNAME')
+PASS = os.getenv("EMAIL_PASS")
+HOST = "smtp.gmail.com"
+PORT = 465 
+reciver = USERNAME
 
 URL = "http://programmer100.pythonanywhere.com/tours/"
 ID = "displaytimer"
@@ -19,8 +31,13 @@ def extract(source):
     return value
 
 
-def send_email():
-    print("Email was sent!")
+def send_email(message):
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL(HOST, PORT, context=context) as server:
+        server.login(USERNAME, PASS)
+        server.sendmail(USERNAME, reciver, message)
+
 
 
 def store(extracted):
@@ -34,13 +51,15 @@ def read(extracted):
 
 
 if __name__ == "__main__":
-    scraped = scrape(URL)
-    extracted = extract(scraped)
-    print(extracted)
-    content = read(extracted)
+    while True:
+        time.sleep(75)
+        scraped = scrape(URL)
+        extracted = extract(scraped)
+        print(extracted)
+        content = read(extracted)
     
-    if extracted != "No upcoming tours":
-        if extracted not in content:
-            send_email()
-            store(extracted)
+        if extracted != "No upcoming tours":
+            if extracted not in content:
+                send_email(message =f"Hey new event was found! {extracted}")
+                store(extracted)
 
