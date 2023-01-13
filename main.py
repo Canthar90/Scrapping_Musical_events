@@ -52,7 +52,7 @@ def read(extracted):
 
 if __name__ == "__main__":
     while True:
-        time.sleep(75)
+        time.sleep(5)
         scraped = scrape(URL)
         extracted = extract(scraped)
         print(extracted)
