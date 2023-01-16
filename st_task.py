@@ -1,14 +1,17 @@
 import streamlit as st
 import plotly.express as px
+import sqlite3
 
 
+connection = sqlite3.connect("data.db")
+cursor =  connection.cursor()
 st.title("Temperature plot")
 
-with open("temperatures.txt", "r") as file:
-    content_list = file.readlines()
+cursor.execute("SELECT * FROM temperatures")
+new_list = cursor.fetchall()
 
 
-new_list = [(elem.strip().split(',')) for elem in content_list]
+
 x = [elem[0] for elem in new_list[1:]]
 y = [elem[1] for elem in new_list[1:]]
 
