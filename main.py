@@ -4,7 +4,14 @@ import smtplib, ssl
 import os
 from dotenv import load_dotenv
 import time
+import sqlite3
 
+
+"INSERT INTO events VALUES ('Tigers', 'Tiger City', '2088.10.14')"
+"SELECT*FROM events WHERE date='2088.10.14'"
+'DELETE FROM events WHERE band="Tigers"'
+
+connetcion =  sqlite3.connect("data.db")
 
 load_dotenv("env.env")
 
@@ -37,18 +44,29 @@ def send_email(message):
     with smtplib.SMTP_SSL(HOST, PORT, context=context) as server:
         server.login(USERNAME, PASS)
         server.sendmail(USERNAME, reciver, message)
+    print("Email was sent")
 
 
 
 def store(extracted):
-    with open("data.txt", "a") as file:
-        file.write(extracted + "\n")
+    row = extracted.split(',')
+    row = [item.strip() for item in row]
+    cursor = connetcion.cursor()
+    cursor.execute("INSERT INTO events VALUES(?,?,?)", row)
+    connetcion.commit()
         
         
 def read(extracted):
-    with open("data.txt", "r") as file:
-        return file.read()
+    row = extracted.split(",")
+    row = [item.strip() for item in row]
+    band, city, date = row
+    cursor = connetcion.cursor()
 
+    cursor.execute("SELECT * FROM events WHERE band=? AND city=? AND date=?",
+                   (band, city, date))
+    rows = cursor.fetchall()
+    print(rows)
+    return rows
 
 if __name__ == "__main__":
     while True:
@@ -56,10 +74,11 @@ if __name__ == "__main__":
         scraped = scrape(URL)
         extracted = extract(scraped)
         print(extracted)
-        content = read(extracted)
+        
     
         if extracted != "No upcoming tours":
-            if extracted not in content:
+            row = read(extracted)
+            if not row:
                 send_email(message =f"Hey new event was found! {extracted}")
                 store(extracted)
 
